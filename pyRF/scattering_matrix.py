@@ -103,6 +103,21 @@ class CapacitanceMatrix(ScatteringMatrix):
         zc_inv = 2j * np.pi * k * phi * c
         return np.array([[(1 - z0 * zc_inv) / (1 + z0 * zc_inv) * np.exp(-4j * np.pi * d[0] * k * z)]])
 
+    def __init__(self, c):
+        super().__init__()
+        self.values['c'] = c
+        self.scattering_matrix = self.capacitance_s_matrix
+
+    def guess_phase(self):
+        return 0
+
+    def update_values(self):
+        super().update_values()
+
+        self.values['z0'] = self.transmission_line_dict[0].z0
+        self.values['phi'] = self.transmission_line_dict[0].phi
+
+class CapacitanceMatrix2(ScatteringMatrix):
     @staticmethod
     def capacitance_s_matrix2(k, z, d, z0, phi, c):
         zc_inv = 2j * np.pi * k * phi * c
@@ -114,24 +129,16 @@ class CapacitanceMatrix(ScatteringMatrix):
     def __init__(self, c):
         super().__init__()
         self.values['c'] = c
-        self.scattering_matrix = None
+        self.scattering_matrix = capacitance_s_matrix2
 
     def guess_phase(self):
         return 0
 
     def update_values(self):
-        if len(self.channel_dict) == 0:
-            return
-        if len(self.channel_dict) == 1:
-            self.scattering_matrix = self.capacitance_s_matrix
-        if len(self.channel_dict) == 2:
-            self.scattering_matrix = self.capacitance_s_matrix2
-
         super().update_values()
 
         self.values['z0'] = self.transmission_line_dict[0].z0
         self.values['phi'] = self.transmission_line_dict[0].phi
-
 
 class InductanceMatrix(ScatteringMatrix):
     @staticmethod
@@ -199,9 +206,14 @@ class ReflectorMatrix(ScatteringMatrix):
 
 
 class TransmissionLine:
-    def __init__(self, z0, phi, length, channel_nr):
+    def __init__(self, z0, phi):
         self.z0 = z0
         self.phi = phi
-        self.channel_nr = channel_nr
-        self.length = length
+        self.channel_nr = None
+        self.length = None
 
+    def set_channel_number(self, channel_nr):
+        self.channel_nr = channel_nr
+
+    def set_length(self, length):
+        self.length = length

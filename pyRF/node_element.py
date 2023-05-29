@@ -1,11 +1,12 @@
-import scattering_matrix as sm
+from . import scattering_matrix as sm
 import numpy as np
 import networkx as nx
 # class for a single space node
 
-class node_element:
+class NodeElement:
     def __init__(self, name):
-        self.__name = name
+        self.name = name
+        self.pins = dict()
         self.space_network = nx.DiGraph()
         self.space_nodes = None
         self.time_edges = None
@@ -14,13 +15,13 @@ class node_element:
         self.scattering_matrix_dict = dict()
 
     def __hash__(self):
-        return hash(self.__name)
+        return hash(self.name)
 
     def get_node_name(self, node_number):
         if self.space_nodes > 1:
-            return self.__name + '_' + str(node_number)
+            return self.name + '_' + str(node_number)
         elif self.space_nodes==1:
-            return self.__name
+            return self.name
         else:
             raise AttributeError('no space ports, this error should not happen, there is something wrong with the class')
 
@@ -48,15 +49,14 @@ class node_element:
         else:
             return True
 
-    # def get_scattering_matrix(self):
-    #     if self.time_edges == 0:
 
 
 
 
 
 
-class Capacitor(node_element):
+
+class CouplingCapacitor(NodeElement):
     def __init__(self, name, c):
         super().__init__(name)
         self.capacitance = c
@@ -69,7 +69,20 @@ class Capacitor(node_element):
             self.scattering_matrix_dict[node_name] = sm.CapacitanceMatrix(c)
             self.space_network.add_node(node_name)
 
-class Reflector(node_element):
+class GroundedCapacitor(NodeElement):
+    def __init__(self, name, position, capacitance):
+        super().__init__(name)
+        self.capacitance = capacitance
+        self.pins = {'alpha': {'position': position}}
+        
+        self.space_nodes = 1
+        self.time_edges = 0
+        self.channel_list = np.ma.masked_all(self.space_nodes, dtype=np.int)
+        self.direction_list = np.ma.masked_all(self.space_nodes, dtype=np.int)
+        self.scattering_matrix_dict[name] = sm.CapacitanceMatrix(c)
+        self.space_network.add_node(name)
+
+class Reflector(NodeElement):
     def __init__(self, name):
         super().__init__(name)
         self.space_nodes = 1
@@ -79,7 +92,7 @@ class Reflector(node_element):
         self.scattering_matrix_dict[name] = sm.ReflectorMatrix()
         self.space_network.add_node(name)
 
-class Open(node_element):
+class Open(NodeElement):
     def __init__(self, name):
         super().__init__(name)
         self.space_nodes = 1
@@ -89,9 +102,10 @@ class Open(node_element):
         self.scattering_matrix_dict[name] = sm.OpenMatrix()
         self.space_network.add_node(name)
 
-class Short(node_element):
-    def __init__(self, name):
+class Short(NodeElement):
+    def __init__(self, name, position):
         super().__init__(name)
+        self.pins = {'alpha': {'position': position}}
         self.space_nodes = 1
         self.time_edges = 0
         self.channel_list = np.ma.masked_all(self.space_nodes, dtype=np.int)
@@ -99,7 +113,7 @@ class Short(node_element):
         self.scattering_matrix_dict[name] = sm.ShortMatrix()
         self.space_network.add_node(name)
 
-class Load(node_element):
+class Load(NodeElement):
     def __init__(self, name):
         super().__init__(name)
         self.space_nodes = 1
