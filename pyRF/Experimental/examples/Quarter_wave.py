@@ -34,11 +34,11 @@ resonator_0.add_circuit_elements(capacitor_1, short_1)
 resonator_0.add_transmission_lines(line_1)
 
 
-resonator_0.add_transmission_lines()
-             .add_short('S2')
+# resonator_0.add_transmission_lines()
+            #  .add_short('S2')
              # .add_open('O2')
-             .add_coupling_capacitor('C2', c=30e-15)
-             .)
+            #  .add_coupling_capacitor('C2', c=30e-15)
+            #  .)
 
 Quarter_wave.add_resonator(resonator0)
 Quarter_wave.finish(starting_position=-10e-3)
