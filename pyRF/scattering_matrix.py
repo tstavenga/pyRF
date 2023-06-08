@@ -206,14 +206,8 @@ class ReflectorMatrix(ScatteringMatrix):
 
 
 class TransmissionLine:
-    def __init__(self, z0, phi):
-        self.z0 = z0
-        self.phi = phi
+    def __init__(self, impedance, phase_velocity, channel_number):
+        self.impedance = impedance
+        self.phase_velocity = phase_velocity
         self.channel_nr = None
-        self.length = None
 
-    def set_channel_number(self, channel_nr):
-        self.channel_nr = channel_nr
-
-    def set_length(self, length):
-        self.length = length
