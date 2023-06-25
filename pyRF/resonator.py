@@ -1,11 +1,23 @@
 import networkx as nx
 import numpy as np
+import scipy
 
 class Resonator:
     def __init__(self, name, number_of_channels) -> None:
         self.name = name
         self.circuit_element_dict: dict = dict()
         self.number_of_channels = number_of_channels
+        self.length: float = None
+
+    def initialize_length(self):
+        min_position = np.inf
+        max_position = -np.inf
+        for element in self.circuit_element_dict.values():
+            position = element['element'].values_dict[element['side']]['position']
+            min_position = min(min_position, position)
+            max_position = max(max_position, position)
+
+        self.length = max_position - min_position
 
     def add_circuit_element(self, single_element_dict):
         if not next(iter(single_element_dict)) in self.circuit_element_dict.keys():
@@ -14,9 +26,16 @@ class Resonator:
     def scattering_matrix(self, k):
         scattering_matrix = np.zeros((2 * self.number_of_channels, 2 * self.number_of_channels), np.complex128)
         for element in self.circuit_element_dict.values():
-            element.populate_scattering_matrix(k, scattering_matrix)
+            element['element'].populate_scattering_matrix(k, element['side'], scattering_matrix)
 
         return scattering_matrix
+    
+    def eigenvalue_guess(self, n, k):
+        phase = 0
+        for element in self.circuit_element_dict.values():
+            matrix = element['element'].scattering_matrix_dict[element['side']]
+            phase += matrix.guess_phase(n, k)
+        return (2*np.pi*n - phase)/(4*np.pi*self.length)
 
             
     def mode_condition(self, k):
@@ -25,10 +44,15 @@ class Resonator:
                 k = k[0]
             elif len(k)==2:
                 k = k[0] + 1j*k[1]
-        mode_cond = np.linalg.det(np.subtract(np.eye(2 * self.N_channels), self.scattering_matrix(k)))
+        mode_cond = np.linalg.det(np.subtract(np.eye(2 * self.number_of_channels), self.scattering_matrix(k)))
         return [mode_cond.real, mode_cond.imag]
     
-    
+    def get_eigenvalue(self):
+        guess = self.eigenvalue_guess(1,0)
+        result = scipy.optimize.root(self.mode_condition, [guess,0.])
+        k_res = result['x'][0]
+        # self.eigenmodes.append(k_res)
+        return k_res
 
         
 # class Resonator:

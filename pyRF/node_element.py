@@ -6,30 +6,37 @@ from . import scattering_matrix as sm
 class NodeElement:
     def __init__(self, element_type, name, values):
         self.number_of_connections: int = 0
-        self.type: str = element_type
+        self.element_type: str = element_type
         self.values: dict = values
+        self.values_dict: dict = dict()
         self.name: str = name
-        self.pins: dict = {'alpha': dict()}
-        self.direction_dict: dict() = dict()
-        self.scattering_matrix = getattr(sm, self.type + 'Matrix')
+        self.pins: dict = dict()
+        self.direction_dict: dict = dict()
+        self.scattering_matrix_dict: dict = dict()
 
-    def connect_transmission_line(self, pin_name, pin_settings):
-        self.pins[pin_name] = pin_settings
-        self.direction_dict[pin_settings['channel_number']
-                            ] = pin_settings['direction']
+    def connect_transmission_line(self, side, pin_name, pin_settings):
+            self.pins[side] = dict() if side not in self.pins else self.pins[side]
+            self.pins[side][pin_name] = pin_settings
+
+            self.direction_dict[side] = dict() if side not in self.direction_dict else self.direction_dict[side]
+            self.direction_dict[side][pin_settings['channel_number']] = pin_settings['direction']
+            
 
     def initialize_values(self):
-        direction_array = np.array(list(self.direction_dict.values()))
-        self.values.update({'direction_array': direction_array})
+        for side in self.pins.keys():
+            direction_array = 1-2*np.array(list(self.direction_dict[side].values()))
+            self.values_dict[side] = self.values 
+            self.values_dict[side].update({'direction_array': direction_array})        
+            self.scattering_matrix_dict[side] = getattr(sm, self.element_type + 'Matrix')
 
-    def populate_scattering_matrix(self, k, scattering_matrix_total):
-        channel_array = np.array(list(self.direction_dict.keys()))
-        direction_array = np.array(list(self.direction_dict.values()))
+    def populate_scattering_matrix(self, k, side, scattering_matrix_total):
+        channel_array = np.array(list(self.direction_dict[side].keys()))
+        direction_array = np.array(list(self.direction_dict[side].values()))
         index_array_1 = direction_array + 2 * channel_array
         index_array_2 = 1 - direction_array + 2 * channel_array
         index_x, index_y = np.meshgrid(index_array_1, index_array_2)
-        scattering_matrix_total[index_y, index_x] = self.scattering_matrix.scattering_matrix(
-            k, **self.values)
+        scattering_matrix_total[index_y, index_x] = self.scattering_matrix_dict[side].scattering_matrix(
+            k, **self.values_dict[side])
 
 
 # class NodeElement:

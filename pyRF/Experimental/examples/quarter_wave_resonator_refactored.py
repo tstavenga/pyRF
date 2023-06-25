@@ -38,10 +38,12 @@ class QuarterWave(Circuit):
                 'Capacitor_Short': {
                     'start_pin': {
                         'element': 'O1',
+                        'side':'main',
                         'pin': 'alpha',
                     },
                     'end_pin': {
                         'element': 'S1',
+                        'side':'main',
                         'pin': 'alpha',
                     },
                     'transmission_line': {
@@ -58,7 +60,16 @@ class QuarterWave(Circuit):
 if __name__ == '__main__':
     quarter_wave_circuit = QuarterWave('quarter_wave')
     quarter_wave_circuit.initialize()
-    quarter_wave_circuit.resonator_dict['R1'].scattering_matrix(500)
+    R1 = quarter_wave_circuit.resonator_dict['R1']
+    print(R1.scattering_matrix(1.354+1j*1e-6))
+    E1 = R1.get_eigenvalue()
+    print(E1)
+    ks = np.linspace(0,200,20001,dtype=np.complex128)
+    mc = np.array(list(map(lambda k:R1.mode_condition(k), ks)))
+    # print(mc)
+    plt.plot(ks,mc)
+    plt.plot(E1,0, 'x')
+    plt.show()
     # for resonator_name, resonator in quarter_wave_circuit.resonator_dict.items():
         # resonator.scattering_matrix(5)
     bla = 8
