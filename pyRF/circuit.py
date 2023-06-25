@@ -1,5 +1,4 @@
-from pyRF.scattering_matrix import TransmissionLine
-import pyRF.node_element as node_element
+import pyRF.node_element as ne
 from pyRF.resonator import Resonator
 
 # from scipy.optimize import minimize
@@ -28,37 +27,35 @@ class Circuit:
 
     def initialize_circuit_elements(self):
         for element_name, element in self.circuit_elements.items():
-            circuit_element = getattr(node_element, element['element'])
-            self.circuit_element_dict[element_name] = circuit_element(element_name, **element['options'])
+            self.circuit_element_dict[element_name] = ne.NodeElement(type = element['element'], 
+                                                                     name = element_name, 
+                                                                     values = element['values'])
         return
 
-    def define_transmission_lines(self):
-        pass
-
-    def initialize_transmission_lines(self):
-        for channel_number, (transmission_line_name, transmission_line) in enumerate(self.transmission_lines.items()):
-            self.transmission_line_dict[transmission_line_name] = TransmissionLine(**transmission_line, channel_number = channel_number)
-        return
     
     def define_resonators(self):
         pass
 
     def initialize_resonators(self):
         for resonator_name, connections in self.resonators.items():
+            print(resonator_name)
             # transmission_line = self.transmission_line_dict[resonator['transmission_line']]
             self.resonator_dict[resonator_name] = self.initialize_single_resonator(resonator_name, connections)
         return
     
     def initialize_single_resonator(self, resonator_name, connections):
-        resonator = Resonator(resonator_name)
-        for connection_name, connection_settings in connections.items():
+        OUT = 1
+        IN = 0
+
+        resonator = Resonator(resonator_name, number_of_channels = len(connections))
+        for channel_number, (connection_name, connection_settings) in enumerate(connections.items()):
             # add the node element to the resonator
             # add the transmission line settings to the node element
             
             start_element_name = connection_settings['start_pin']['element']
             start_node_element = self.circuit_element_dict[start_element_name]
             start_element = {
-                start_element_name: start_node_element
+                start_element_name: start_node_element,
             }
 
             end_element_name = connection_settings['end_pin']['element'] 
@@ -75,24 +72,42 @@ class Circuit:
             start_pin = connection_settings['start_pin']['pin']
             end_pin = connection_settings['end_pin']['pin']
 
-            transmission_line = connection_settings['transmission_line']
+            start_pin_settings = {
+                'direction': OUT,
+                'channel_number': channel_number,
+                **connection_settings['transmission_line']
+            }
+            end_pin_settings = {
+                'direction': IN,
+                'channel_number': channel_number,
+                **connection_settings['transmission_line']
+            }
 
-            start_node_element.set_transmission_line(start_pin, transmission_line)
-            end_node_element.set_transmission_line(end_pin, transmission_line)
+            start_node_element.connect_transmission_line(start_pin, start_pin_settings)
+            end_node_element.connect_transmission_line(end_pin, end_pin_settings)
 
 
 
         return resonator
     
+    def initialize_values(self):
+        for circuit_element in self.circuit_element_dict.values():
+            circuit_element.initialize_values()
+        
+    
     def initialize(self):
         
         self.define_circuit_elements()
-        self.define_transmission_lines()
         self.define_resonators()
 
         self.initialize_circuit_elements()
-        self.initialize_transmission_lines()
         self.initialize_resonators()
+
+        self.initialize_values()
+
+
+
+        
 
         
 

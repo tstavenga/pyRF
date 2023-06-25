@@ -1,17 +1,36 @@
 import networkx as nx
-from .scattering_matrix import (TransmissionLine)
-from . import node_element as ne
+import numpy as np
 
 class Resonator:
-    def __init__(self, name) -> None:
+    def __init__(self, name, number_of_channels) -> None:
         self.name = name
         self.circuit_element_dict: dict = dict()
+        self.number_of_channels = number_of_channels
 
     def add_circuit_element(self, single_element_dict):
-        if not single_element_dict.keys() in self.circuit_element_dict.keys():
+        if not next(iter(single_element_dict)) in self.circuit_element_dict.keys():
             self.circuit_element_dict.update(single_element_dict)
 
+    def scattering_matrix(self, k):
+        scattering_matrix = np.zeros((2 * self.number_of_channels, 2 * self.number_of_channels), np.complex128)
+        for element in self.circuit_element_dict.values():
+            element.populate_scattering_matrix(k, scattering_matrix)
 
+        return scattering_matrix
+
+            
+    def mode_condition(self, k):
+        if type(k) == np.ndarray:
+            if len(k)==1:
+                k = k[0]
+            elif len(k)==2:
+                k = k[0] + 1j*k[1]
+        mode_cond = np.linalg.det(np.subtract(np.eye(2 * self.N_channels), self.scattering_matrix(k)))
+        return [mode_cond.real, mode_cond.imag]
+    
+    
+
+        
 # class Resonator:
 #     def __init__(self, name):
 #         self.name = name

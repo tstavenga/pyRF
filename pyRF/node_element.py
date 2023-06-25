@@ -1,15 +1,36 @@
-from . import scattering_matrix as sm
 import numpy as np
-import networkx as nx
+
+from . import scattering_matrix as sm
 
 
 class NodeElement:
-    def __init__(self,name):
-        self.name = name
-        self.pins: dict = dict()
+    def __init__(self, element_type, name, values):
+        self.number_of_connections: int = 0
+        self.type: str = element_type
+        self.values: dict = values
+        self.name: str = name
+        self.pins: dict = {'alpha': dict()}
+        self.direction_dict: dict() = dict()
+        self.scattering_matrix = getattr(sm, self.type + 'Matrix')
 
-    def set_transmission_line(self, pin, transmission_line):
-        self.pins
+    def connect_transmission_line(self, pin_name, pin_settings):
+        self.pins[pin_name] = pin_settings
+        self.direction_dict[pin_settings['channel_number']
+                            ] = pin_settings['direction']
+
+    def initialize_values(self):
+        direction_array = np.array(list(self.direction_dict.values()))
+        self.values.update({'direction_array': direction_array})
+
+    def populate_scattering_matrix(self, k, scattering_matrix_total):
+        channel_array = np.array(list(self.direction_dict.keys()))
+        direction_array = np.array(list(self.direction_dict.values()))
+        index_array_1 = direction_array + 2 * channel_array
+        index_array_2 = 1 - direction_array + 2 * channel_array
+        index_x, index_y = np.meshgrid(index_array_1, index_array_2)
+        scattering_matrix_total[index_y, index_x] = self.scattering_matrix.scattering_matrix(
+            k, **self.values)
+
 
 # class NodeElement:
 #     def __init__(self, name):
@@ -58,12 +79,6 @@ class NodeElement:
 #             return True
 
 
-
-
-
-
-
-
 # class CouplingCapacitor(NodeElement):
 #     def __init__(self, name, c):
 #         super().__init__(name)
@@ -79,16 +94,15 @@ class NodeElement:
 
 # class GroundedCapacitor(NodeElement):
 #     def __init__(self, name, position, capacitance):
-#         super().__init__(name)
+#         super().__init__(name, position)
 #         self.capacitance = capacitance
-#         self.pins = {'alpha': {'position': position}}
-        
-#         self.space_nodes = 1
-#         self.time_edges = 0
-#         self.channel_list = np.ma.masked_all(self.space_nodes, dtype=np.int)
-#         self.direction_list = np.ma.masked_all(self.space_nodes, dtype=np.int)
-#         self.scattering_matrix_dict[name] = sm.CapacitanceMatrix(capacitance)
-#         self.space_network.add_node(name)
+#         self.pins = {
+#             'alpha': dict(),
+#             'beta': dict(),
+#             }
+
+        # self.scattering_matrix = sm.CapacitanceMatrix(capacitance)
+
 
 # class Reflector(NodeElement):
 #     def __init__(self, name):
@@ -112,7 +126,7 @@ class NodeElement:
 
 # class Short(NodeElement):
 #     def __init__(self, name, position):
-#         super().__init__(name)
+#         super().__init__(name, position)
 #         self.pins = {'alpha': {'position': position}}
 #         self.space_nodes = 1
 #         self.time_edges = 0
@@ -130,14 +144,3 @@ class NodeElement:
 #         self.direction_list = np.ma.masked_all(self.space_nodes, dtype=np.int)
 #         self.scattering_matrix_dict[name] = sm.LoadMatrix()
 #         self.space_network.add_node(name)
-
-
-
-
-
-
-
-
-
-
-
