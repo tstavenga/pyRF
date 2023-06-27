@@ -12,14 +12,15 @@ class QuarterWave(Circuit):
         super().__init__(name)
 
     def define_circuit_elements(self):
-        capacitance = 30e-15
+        capacitance = 300000e-15
         open_position = 0
         resonator_length = 4e-3
 
         self.circuit_elements = {
-            'O1': {
-                'element': 'Open',
+            'C1': {
+                'element': 'Capacitor',
                 'values': {
+                    'capacitance':capacitance,
                     'position': open_position,
                 }
             },
@@ -37,7 +38,7 @@ class QuarterWave(Circuit):
             'R1': {
                 'Capacitor_Short': {
                     'start_pin': {
-                        'element': 'O1',
+                        'element': 'C1',
                         'side':'main',
                         'pin': 'alpha',
                     },
@@ -63,12 +64,16 @@ if __name__ == '__main__':
     R1 = quarter_wave_circuit.resonator_dict['R1']
     print(R1.scattering_matrix(1.354+1j*1e-6))
     E1 = R1.get_eigenvalue()
-    print(E1)
+    E2 = R1.get_eigenvalue(n=2)
+
+    print('E1', E1)
+    print('E2', E2)
     ks = np.linspace(0,200,20001,dtype=np.complex128)
     mc = np.array(list(map(lambda k:R1.mode_condition(k), ks)))
     # print(mc)
     plt.plot(ks,mc)
     plt.plot(E1,0, 'x')
+    plt.plot(E2,0, 'x')
     plt.show()
     # for resonator_name, resonator in quarter_wave_circuit.resonator_dict.items():
         # resonator.scattering_matrix(5)

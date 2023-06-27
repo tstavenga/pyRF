@@ -15,18 +15,28 @@ class NodeElement:
         self.scattering_matrix_dict: dict = dict()
 
     def connect_transmission_line(self, side, pin_name, pin_settings):
-            self.pins[side] = dict() if side not in self.pins else self.pins[side]
-            self.pins[side][pin_name] = pin_settings
+        self.pins[side] = dict() if side not in self.pins else self.pins[side]
+        self.pins[side][pin_name] = pin_settings
 
-            self.direction_dict[side] = dict() if side not in self.direction_dict else self.direction_dict[side]
-            self.direction_dict[side][pin_settings['channel_number']] = pin_settings['direction']
+        self.direction_dict[side] = dict() if side not in self.direction_dict else self.direction_dict[side]
+        self.direction_dict[side][pin_settings['channel_number']] = pin_settings['direction']
             
 
     def initialize_values(self):
-        for side in self.pins.keys():
+        for side, pin in self.pins.items(): #loop over sides
+            # this should also have a side dependent position update
             direction_array = 1-2*np.array(list(self.direction_dict[side].values()))
             self.values_dict[side] = self.values 
-            self.values_dict[side].update({'direction_array': direction_array})        
+
+            for pin_values in pin.values():
+                # this only works if both channels have the same characteristic impedance and phase velocity
+                # this is done to add the phase velocity and characteristic impedance to the dictionary for the 
+                # scattering matrix parameters
+                self.values_dict[side].update({'characteristic_impedance': pin_values['characteristic_impedance']})        
+                self.values_dict[side].update({'phase_velocity': pin_values['phase_velocity']}) 
+                
+
+            self.values_dict[side].update({'direction_array': direction_array}) 
             self.scattering_matrix_dict[side] = getattr(sm, self.element_type + 'Matrix')
 
     def populate_scattering_matrix(self, k, side, scattering_matrix_total):
@@ -38,6 +48,8 @@ class NodeElement:
         scattering_matrix_total[index_y, index_x] = self.scattering_matrix_dict[side].scattering_matrix(
             k, **self.values_dict[side])
 
+    def guess_phase(self, k, side):
+        return self.scattering_matrix_dict[side].guess_phase(k = k, **self.values_dict[side])
 
 # class NodeElement:
 #     def __init__(self, name):

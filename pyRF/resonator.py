@@ -33,8 +33,7 @@ class Resonator:
     def eigenvalue_guess(self, n, k):
         phase = 0
         for element in self.circuit_element_dict.values():
-            matrix = element['element'].scattering_matrix_dict[element['side']]
-            phase += matrix.guess_phase(n, k)
+            phase += element['element'].guess_phase(k, element['side'])
         return (2*np.pi*n - phase)/(4*np.pi*self.length)
 
             
@@ -47,10 +46,14 @@ class Resonator:
         mode_cond = np.linalg.det(np.subtract(np.eye(2 * self.number_of_channels), self.scattering_matrix(k)))
         return [mode_cond.real, mode_cond.imag]
     
-    def get_eigenvalue(self):
-        guess = self.eigenvalue_guess(1,0)
-        result = scipy.optimize.root(self.mode_condition, [guess,0.])
-        k_res = result['x'][0]
+    def get_eigenvalue(self, n = 1):
+        guess = 0
+        for i in range(15):
+            guess = self.eigenvalue_guess(n,guess)
+            print(guess)
+
+        result = scipy.optimize.root(self.mode_condition, [guess,0.], method = 'lm')
+        k_res = abs(result['x'][0])
         # self.eigenmodes.append(k_res)
         return k_res
 
