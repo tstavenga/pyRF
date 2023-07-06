@@ -5,14 +5,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-quarter_wave_circuit = Circuit('Quarter wave resonator')
 
 class QuarterWave(Circuit):
     def __init__(self, name='Default'):
         super().__init__(name)
 
     def define_circuit_elements(self):
-        capacitance = 300000e-15
+        capacitance = 30e-10
         open_position = 0
         resonator_length = 4e-3
 
@@ -62,20 +61,13 @@ if __name__ == '__main__':
     quarter_wave_circuit = QuarterWave('quarter_wave')
     quarter_wave_circuit.initialize()
     R1 = quarter_wave_circuit.resonator_dict['R1']
-    print(R1.scattering_matrix(1.354+1j*1e-6))
-    E1 = R1.get_eigenvalue()
-    E2 = R1.get_eigenvalue(n=2)
-
-    print('E1', E1)
-    print('E2', E2)
-    ks = np.linspace(0,200,20001,dtype=np.complex128)
+    ks = np.linspace(0,2000,20001,dtype=np.complex128)
     mc = np.array(list(map(lambda k:R1.mode_condition(k), ks)))
-    # print(mc)
     plt.plot(ks,mc)
-    plt.plot(E1,0, 'x')
-    plt.plot(E2,0, 'x')
+    for n in range(17):
+        guess = 0
+        for i in range(1500):
+            guess = R1.eigenvalue_guess(n+1,guess)
+        plt.plot(R1.get_eigenvalue(n=n+1),0,'rx')
+        plt.plot(guess,0,'g+')
     plt.show()
-    # for resonator_name, resonator in quarter_wave_circuit.resonator_dict.items():
-        # resonator.scattering_matrix(5)
-    bla = 8
-    # quarter_wave_circuit.

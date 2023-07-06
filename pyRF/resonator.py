@@ -50,12 +50,26 @@ class Resonator:
         guess = 0
         for i in range(15):
             guess = self.eigenvalue_guess(n,guess)
-            print(guess)
 
-        result = scipy.optimize.root(self.mode_condition, [guess,0.], method = 'lm')
+        result = scipy.optimize.root(self.mode_condition, [guess,0.])
         k_res = abs(result['x'][0])
         # self.eigenmodes.append(k_res)
         return k_res
+    
+
+    def eigenfunction(self, z, n=1):
+        z = np.array(z).astype('complex128')
+        k_res = self.eigenmodes[0]
+        eigenfunction_coefficients = scipy.linalg.null_space(self.mode_condition(k_res), rcond=1e-5)[:, 0]
+        self.channel_eigenfunction = []
+        for i in range(self.N_channels):
+            self.channel_coefficients[i] = eigenfunction_coefficients[2 * i: 2 * (i + 1)]/self.normalization_factor
+            self.channel_eigenfunction.append(lambda z,i=i: np.dot(self.channel_coefficients[i], self.basis(k_res, z)))
+
+
+        return np.piecewise(z,
+                           [np.logical_and(z >= z_start, z <= z_stop) for z_start, z_stop in self.channel_limits.values()],
+                           self.channel_eigenfunction)
 
         
 # class Resonator:
