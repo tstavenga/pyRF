@@ -40,9 +40,17 @@ class CapacitorMatrix:
 
     @staticmethod
     def guess_phase(k, characteristic_impedance, phase_velocity, capacitance, **_):
-        return 2 * np.arctan(2 * np.pi * k * phase_velocity * capacitance * characteristic_impedance)*0
+        return 2 * np.arctan(2 * np.pi * k * phase_velocity * capacitance * characteristic_impedance)
 
 
-
+class PortMatrix:
+    @staticmethod
+    def scattering_matrix(**_):
+        return np.array([[0]])
+    
+    @staticmethod
+    def guess_phase(**_):
+        return 0
+    
 if __name__ == '__main__':
     x = OpenMatrix()

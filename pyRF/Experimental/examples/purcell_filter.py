@@ -15,7 +15,7 @@ class TwoChannelResonator(Circuit):
         open_capacitance = 24.5e-15
         open_position = 3547.4e-6
         capacitor_position = 3200e-6
-        short_position = 0
+        short_position = 0.
 
         self.circuit_elements = {
             'C2': {

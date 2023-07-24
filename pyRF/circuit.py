@@ -17,10 +17,12 @@ class Circuit:
         self.name = name
         self.circuit_elements: dict = None
         self.transmission_lines: dict = None
-        self.circuit_element_dict: dict = dict()
-        self.transmission_line_dict: dict = dict()
-        self.resonator_dict: dict = dict()
-        self.resonators: dict = dict()
+        self.circuit_element_dict: dict = {}
+        self.transmission_line_dict: dict = {}
+        self.resonator_dict: dict = {}
+        self.resonators: dict = {}
+        self.feedlines: dict = {}
+        self.feedline_dict: dict = {}
 
     def define_circuit_elements(self):
         pass
@@ -39,6 +41,14 @@ class Circuit:
     def initialize_resonators(self):
         for resonator_name, connections in self.resonators.items():
             self.resonator_dict[resonator_name] = self.initialize_single_resonator(resonator_name, connections)
+        return   
+        
+    def define_feedlines(self):
+        pass
+
+    def initialize_feedlines(self):
+        for feedline_name, connections in self.feedlines.items():
+            self.feedline_dict[feedline_name] = self.initialize_single_resonator(feedline_name, connections)
         return
     
     def initialize_resonator_lengths(self):
@@ -50,7 +60,7 @@ class Circuit:
         IN = 0
 
         resonator = Resonator(resonator_name, number_of_channels = len(connections))
-        for channel_number, (connection_name, connection_settings) in enumerate(connections.items()):
+        for channel_number, connection_settings in enumerate(connections.values()):
             # add the node element to the resonator
             # add the transmission line settings to the node element
             
@@ -81,6 +91,9 @@ class Circuit:
 
             resonator.add_circuit_element(start_element)
             resonator.add_circuit_element(end_element)
+            start_position = start_node_element.values['position'] if isinstance(start_node_element.values['position'], (int, float, complex)) else start_node_element.values['position'][start_side]
+            end_position = end_node_element.values['position'] if isinstance(end_node_element.values['position'], float) else end_node_element.values['position'][end_side]
+            resonator.set_channel_limit(channel_number, start_position, end_position)
 
             # add the transmission line parameters to the correct pin of the node element
             start_pin = connection_settings['start_pin']['pin']
@@ -115,9 +128,11 @@ class Circuit:
         
         self.define_circuit_elements()
         self.define_resonators()
+        self.define_feedlines()
 
         self.initialize_circuit_elements()
         self.initialize_resonators()
+        self.initialize_feedlines()
 
         self.initialize_values()
         self.initialize_resonator_lengths()

@@ -26,7 +26,8 @@ class NodeElement:
         for side, pin in self.pins.items(): #loop over sides
             # this should also have a side dependent position update
             direction_array = 1-2*np.array(list(self.direction_dict[side].values()))
-            self.values_dict[side] = self.values 
+            self.values_dict[side] = self.values
+            self.values_dict[side]['position'] = self.values['position'] if isinstance(self.values['position'], (int, float, complex)) else self.values['position'][side]
 
             for pin_values in pin.values():
                 # this only works if both channels have the same characteristic impedance and phase velocity

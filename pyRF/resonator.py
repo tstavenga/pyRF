@@ -1,13 +1,19 @@
 import networkx as nx
 import numpy as np
 import scipy
+from . import eigenfunction as eig
 
 class Resonator:
     def __init__(self, name, number_of_channels) -> None:
         self.name = name
-        self.circuit_element_dict: dict = dict()
+        self.circuit_element_dict: dict = {}
         self.number_of_channels = number_of_channels
         self.length: float = None
+        self.min_position: float = None
+        self.max_position: float = None
+        self.channel_limits: dict = {}
+        self.eigenvalues: dict = {}
+        self.eigenfunctions: dict = {}
 
     def initialize_length(self):
         min_position = np.inf
@@ -17,11 +23,22 @@ class Resonator:
             min_position = min(min_position, position)
             max_position = max(max_position, position)
 
+        self.min_position = min_position
+        self.max_position = max_position
         self.length = max_position - min_position
 
     def add_circuit_element(self, single_element_dict):
         if not next(iter(single_element_dict)) in self.circuit_element_dict.keys():
             self.circuit_element_dict.update(single_element_dict)
+
+    def set_channel_limit(self, channel_number, start_position, end_position):
+        channel_limit = {
+            channel_number: [
+                start_position,
+                end_position
+            ]
+        }
+        self.channel_limits.update(channel_limit)
 
     def scattering_matrix(self, k):
         scattering_matrix = np.zeros((2 * self.number_of_channels, 2 * self.number_of_channels), np.complex128)
@@ -36,14 +53,16 @@ class Resonator:
             phase += element['element'].guess_phase(k, element['side'])
         return (2*np.pi*n - phase)/(4*np.pi*self.length)
 
-            
+    def matrix_condition(self, k):
+        return np.subtract(np.eye(2 * self.number_of_channels), self.scattering_matrix(k))
+    
     def mode_condition(self, k):
         if type(k) == np.ndarray:
             if len(k)==1:
                 k = k[0]
             elif len(k)==2:
                 k = k[0] + 1j*k[1]
-        mode_cond = np.linalg.det(np.subtract(np.eye(2 * self.number_of_channels), self.scattering_matrix(k)))
+        mode_cond = np.linalg.det(self.matrix_condition(k))
         return [mode_cond.real, mode_cond.imag]
     
     def get_eigenvalue(self, n = 1):
@@ -52,25 +71,31 @@ class Resonator:
             guess = self.eigenvalue_guess(n,guess)
 
         result = scipy.optimize.root(self.mode_condition, [guess,0.])
-        k_res = abs(result['x'][0])
-        # self.eigenmodes.append(k_res)
-        return k_res
+        resonance_frequency_k = abs(result['x'][0])
+        self.eigenvalues[n] = resonance_frequency_k
+        return resonance_frequency_k
     
 
-    def eigenfunction(self, z, n=1):
-        z = np.array(z).astype('complex128')
-        k_res = self.eigenmodes[0]
-        eigenfunction_coefficients = scipy.linalg.null_space(self.mode_condition(k_res), rcond=1e-5)[:, 0]
-        self.channel_eigenfunction = []
-        for i in range(self.N_channels):
-            self.channel_coefficients[i] = eigenfunction_coefficients[2 * i: 2 * (i + 1)]/self.normalization_factor
-            self.channel_eigenfunction.append(lambda z,i=i: np.dot(self.channel_coefficients[i], self.basis(k_res, z)))
+    def get_eigenfunction(self, n=1):
+        eigenfunction = self.eigenfunctions.get(n, None)
+        if eigenfunction:
+            return eigenfunction
+        
+        resonance_frequency_k = self.eigenvalues.get(n, self.get_eigenvalue(n))
 
+        eigenfunction_coefficients = scipy.linalg.null_space(self.matrix_condition(resonance_frequency_k), rcond=1e-7)[:, 0]
 
-        return np.piecewise(z,
-                           [np.logical_and(z >= z_start, z <= z_stop) for z_start, z_stop in self.channel_limits.values()],
-                           self.channel_eigenfunction)
+        coefficients = {}
+        for channel in range(self.number_of_channels):
+            coefficients[channel] = eigenfunction_coefficients[2 * channel: 2 * (channel + 1)]
+        self.eigenfunctions[n] = eig.Eigenfunction(coefficients, 
+                                                   self.channel_limits, 
+                                                   resonance_frequency_k, 
+                                                   self.min_position,
+                                                   self.max_position)
 
+        return self.eigenfunctions[n]
+        
         
 # class Resonator:
 #     def __init__(self, name):
