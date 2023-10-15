@@ -2,16 +2,6 @@ import pyRF.node_element as ne
 from pyRF.resonator import Resonator
 from pyRF.feedline import FeedLine
 
-# from scipy.optimize import minimize
-
-# from scipy.linalg import null_space
-# import scipy.integrate
-# import scipy
-# import networkx as nx
-# import numpy as np
-# import re
-# import matplotlib.pyplot as plt
-# import matplotlib.animation as animation
 
 
 class Circuit:

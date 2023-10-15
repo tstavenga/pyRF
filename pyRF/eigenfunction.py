@@ -1,4 +1,3 @@
-
 from typing import Any
 import numpy as np
 import scipy
@@ -6,11 +5,11 @@ import scipy
 
 class Eigenfunction:
     def __init__(self, 
-                 coefficients, 
-                 channel_limits, 
+                 coefficients: np.ndarray, 
+                 channel_limits: dict, 
                  resonance_frequency_k,
-                 min_position,
-                 max_position) -> None:
+                 min_position: float,
+                 max_position: float) -> None:
         
         self.coefficients = coefficients
         self.channel_limits = channel_limits
@@ -48,8 +47,9 @@ class Eigenfunction:
         sign = np.sign(self.coefficients[0][0].real)
         return np.sqrt(normalization_factor)*sign
 
-
-
     @staticmethod
     def basis(k, z):
         return np.array([np.exp(-2j * np.pi * k * z), np.exp(2j * np.pi * k * z)])
+    
+# class FeedlineEigenfunction(Eigenfunction):
+    

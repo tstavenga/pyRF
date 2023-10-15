@@ -48,6 +48,20 @@ class NodeElement:
         index_x, index_y = np.meshgrid(index_array_1, index_array_2)
         scattering_matrix_total[index_y, index_x] = self.scattering_matrix_dict[side].scattering_matrix(
             k, **self.values_dict[side])
+        if self.element_type == 'Port':
+            index_x, index_y = np.meshgrid(index_array_2, index_array_2)
+            scattering_matrix_total[index_y, index_x] =  1
+            
+
+
+    def populate_scattering_matrix_derivative(self, k, side, scattering_matrix_derivative_total):
+        channel_array = np.array(list(self.direction_dict[side].keys()))
+        direction_array = np.array(list(self.direction_dict[side].values()))
+        index_array_1 = direction_array + 2 * channel_array
+        index_array_2 = 1 - direction_array + 2 * channel_array
+        index_x, index_y = np.meshgrid(index_array_1, index_array_2)
+        scattering_matrix_derivative_total[index_y, index_x] = self.scattering_matrix_dict[side].derivative(
+            k, **self.values_dict[side])
 
     def guess_phase(self, k, side):
         return self.scattering_matrix_dict[side].guess_phase(k = k, **self.values_dict[side])

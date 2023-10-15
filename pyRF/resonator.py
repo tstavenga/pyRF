@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 import scipy
 from . import eigenfunction as eig
+from .helper.adjugate import adjugate
 
 class Resonator:
     def __init__(self, name, number_of_channels) -> None:
@@ -47,6 +48,13 @@ class Resonator:
 
         return scattering_matrix
     
+    def scattering_matrix_derivative(self, k):
+        scattering_matrix_derivative = np.zeros((2 * self.number_of_channels, 2 * self.number_of_channels), np.complex128)
+        for element in self.circuit_element_dict.values():
+            element['element'].populate_scattering_matrix_derivative(k, element['side'], scattering_matrix_derivative)
+
+        return scattering_matrix_derivative
+    
     def eigenvalue_guess(self, n, k):
         phase = 0
         for element in self.circuit_element_dict.values():
@@ -54,7 +62,7 @@ class Resonator:
         return (2*np.pi*n - phase)/(4*np.pi*self.length)
 
     def matrix_condition(self, k):
-        return np.subtract(np.eye(2 * self.number_of_channels), self.scattering_matrix(k))
+        return np.subtract(self.scattering_matrix(k), np.eye(2 * self.number_of_channels))
     
     def mode_condition(self, k):
         if type(k) == np.ndarray:
@@ -65,12 +73,32 @@ class Resonator:
         mode_cond = np.linalg.det(self.matrix_condition(k))
         return [mode_cond.real, mode_cond.imag]
     
+    def matrix_condition_derivative(self, k):
+        adjugate_matrix = adjugate(self.matrix_condition(k))
+        derivative_matrix = self.scattering_matrix_derivative(k)
+        matrix_condition_derivative_value = np.trace(adjugate_matrix @ derivative_matrix)
+        return matrix_condition_derivative_value
+    
+    def jacobian(self, k):
+        if type(k) == np.ndarray:
+            if len(k)==1:
+                k = k[0]
+            elif len(k)==2:
+                k = k[0] + 1j*k[1]
+        derivative = self.matrix_condition_derivative(k)
+        a = np.real(derivative)
+        b = np.imag(derivative)
+        jacobian = np.array([[a, -b],
+                             [b, a]])
+        return jacobian
+
+    
     def get_eigenvalue(self, n = 1):
         guess = 0
-        for i in range(15):
+        for i in range(1):
             guess = self.eigenvalue_guess(n,guess)
 
-        result = scipy.optimize.root(self.mode_condition, [guess,0.])
+        result = scipy.optimize.root(self.mode_condition, [guess,0.])#, jac=self.jacobian)
         resonance_frequency_k = abs(result['x'][0])
         self.eigenvalues[n] = resonance_frequency_k
         return resonance_frequency_k
