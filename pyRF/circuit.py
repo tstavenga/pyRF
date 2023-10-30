@@ -52,6 +52,10 @@ class Circuit:
         for resonator in self.resonator_dict.values():
             resonator.initialize_length()
 
+    def initialize_feedline_lengths(self):
+        for feedline in self.feedline_dict.values():
+            feedline.initialize_length()
+
     def initialize_single_resonator(self, resonator, connections):
 
         
@@ -165,3 +169,4 @@ class Circuit:
 
         self.initialize_values()
         self.initialize_resonator_lengths()
+        self.initialize_feedline_lengths()

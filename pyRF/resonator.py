@@ -113,10 +113,8 @@ class Resonator:
 
         eigenfunction_coefficients = scipy.linalg.null_space(self.matrix_condition(resonance_frequency_k), rcond=1e-7)[:, 0]
 
-        coefficients = {}
-        for channel in range(self.number_of_channels):
-            coefficients[channel] = eigenfunction_coefficients[2 * channel: 2 * (channel + 1)]
-        self.eigenfunctions[n] = eig.Eigenfunction(coefficients, 
+
+        self.eigenfunctions[n] = eig.Eigenfunction(eigenfunction_coefficients, 
                                                    self.channel_limits, 
                                                    resonance_frequency_k, 
                                                    self.min_position,
