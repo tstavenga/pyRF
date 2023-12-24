@@ -95,7 +95,7 @@ class Resonator:
     
     def get_eigenvalue(self, n = 1):
         guess = 0
-        for i in range(1):
+        for i in range(10):
             guess = self.eigenvalue_guess(n,guess)
 
         result = scipy.optimize.root(self.mode_condition, [guess,0.])#, jac=self.jacobian)
