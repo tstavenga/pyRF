@@ -9,19 +9,19 @@ class FeedLine(Resonator):
     def __init__(self, name, number_of_channels) -> None:
         super().__init__(name, number_of_channels)
 
-    def get_eigenfunction(self, k):
-        eigenfunction = self.eigenfunctions.get(k, None)
+    def get_eigenfunction(self, frequency):
+        eigenfunction = self.eigenfunctions.get(frequency, None)
         if eigenfunction:
             return eigenfunction
 
         eigenfunction_coefficients = scipy.linalg.null_space(
-            self.matrix_condition(k), rcond=1e-7)
+            self.matrix_condition(frequency), rcond=1e-7)
 
         eigenfunctions = []
 
         for vector in eigenfunction_coefficients.T:
             eigenfunctions.append(
-                eig.FeedlineEigenfunction(vector, self.channel_limits, k,
+                eig.FeedlineEigenfunction(vector, self.channel_limits, frequency,
                                           self.min_position,
                                           self.max_position))
             

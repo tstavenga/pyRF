@@ -8,13 +8,15 @@ class Eigenfunction:
     def __init__(self, 
                  coefficients: np.ndarray, 
                  channel_limits: dict, 
-                 resonance_frequency_k,
+                 resonance_frequency: float,
+                 phase_velocity: float,
                  min_position: float,
                  max_position: float) -> None:
         
         self.coefficients = coefficients
         self.channel_limits = channel_limits
-        self.resonance_frequency_k = resonance_frequency_k
+        self.resonance_frequency = resonance_frequency
+        self.phase_velocity = phase_velocity
         self.min_position = min_position
         self.max_position = max_position
 
@@ -32,7 +34,7 @@ class Eigenfunction:
         
         for channel in self.channel_limits.keys():        
             channel_eigenfunctions.append(lambda z,channel=channel: np.dot(self.coefficients[2 * channel: 2 * (channel + 1)], 
-                                                                                self.basis(self.resonance_frequency_k, z)))
+                                                                                self.basis(self.resonance_frequency, self.phase_velocity, z)))
         return channel_eigenfunctions
 
     def __call__(self, z) -> Any:
@@ -66,12 +68,15 @@ class Eigenfunction:
             fig, ax = plt.subplots(1,1)
         position_values = np.linspace(self.min_position, self.max_position, number_of_points, dtype=np.complex128)
         eigenfunction_values = self(position_values)
-        ax.plot(position_values, eigenfunction_values, **plot_kwargs)
+        ax.plot(position_values, np.real(eigenfunction_values), **plot_kwargs, label='real part')
+        ax.plot(position_values, np.imag(eigenfunction_values), **plot_kwargs, label='imaginary part')
+        ax.legend()
+        return ax
 
 
     @staticmethod
-    def basis(k, z):
-        return np.array([np.exp(-2j * np.pi * k * z), np.exp(2j * np.pi * k * z)])
+    def basis(frequency, phase_velocity, z):
+        return np.array([np.exp(-2j * np.pi * frequency / phase_velocity * z), np.exp(2j * np.pi * frequency / phase_velocity * z)])
     
 class FeedlineEigenfunction(Eigenfunction):
     def normalization_factor(self):
