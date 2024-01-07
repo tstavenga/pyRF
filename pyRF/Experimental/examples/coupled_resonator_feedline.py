@@ -11,7 +11,7 @@ class ResonatorFeedline(Circuit):
         super().__init__(name)
 
     def define_circuit_elements(self):
-        capacitance = 30e-15
+        capacitance = 0e-15
         open_position = 0
         resonator_length = 4e-3
 

@@ -1,6 +1,7 @@
 import numpy as np
 
 from . import scattering_matrix as sm
+from copy import copy
 
 
 class NodeElement:
@@ -26,7 +27,7 @@ class NodeElement:
         for side, pin in self.pins.items(): #loop over sides
             # this should also have a side dependent position update
             direction_array = 1-2*np.array(list(self.direction_dict[side].values()))
-            self.values_dict[side] = self.values
+            self.values_dict[side] = copy(self.values)
             self.values_dict[side]['position'] = self.values['position'] if isinstance(self.values['position'], (int, float, complex)) else self.values['position'][side]
 
             for pin_values in pin.values():
