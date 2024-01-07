@@ -1,13 +1,20 @@
 import networkx as nx
 import numpy as np
 import scipy
+from . import eigenfunction as eig
+from .helper.adjugate import adjugate
 
 class Resonator:
     def __init__(self, name, number_of_channels) -> None:
         self.name = name
-        self.circuit_element_dict: dict = dict()
+        self.circuit_element_dict: dict = {}
         self.number_of_channels = number_of_channels
         self.length: float = None
+        self.min_position: float = None
+        self.max_position: float = None
+        self.channel_limits: dict = {}
+        self.eigenvalues: dict = {}
+        self.eigenfunctions: dict = {}
 
     def initialize_length(self):
         min_position = np.inf
@@ -17,11 +24,22 @@ class Resonator:
             min_position = min(min_position, position)
             max_position = max(max_position, position)
 
+        self.min_position = min_position
+        self.max_position = max_position
         self.length = max_position - min_position
 
     def add_circuit_element(self, single_element_dict):
         if not next(iter(single_element_dict)) in self.circuit_element_dict.keys():
             self.circuit_element_dict.update(single_element_dict)
+
+    def set_channel_limit(self, channel_number, start_position, end_position):
+        channel_limit = {
+            channel_number: [
+                start_position,
+                end_position
+            ]
+        }
+        self.channel_limits.update(channel_limit)
 
     def scattering_matrix(self, k):
         scattering_matrix = np.zeros((2 * self.number_of_channels, 2 * self.number_of_channels), np.complex128)
@@ -30,47 +48,80 @@ class Resonator:
 
         return scattering_matrix
     
+    def scattering_matrix_derivative(self, k):
+        scattering_matrix_derivative = np.zeros((2 * self.number_of_channels, 2 * self.number_of_channels), np.complex128)
+        for element in self.circuit_element_dict.values():
+            element['element'].populate_scattering_matrix_derivative(k, element['side'], scattering_matrix_derivative)
+
+        return scattering_matrix_derivative
+    
     def eigenvalue_guess(self, n, k):
         phase = 0
         for element in self.circuit_element_dict.values():
             phase += element['element'].guess_phase(k, element['side'])
         return (2*np.pi*n - phase)/(4*np.pi*self.length)
 
-            
+    def matrix_condition(self, k):
+        return np.subtract(self.scattering_matrix(k), np.eye(2 * self.number_of_channels))
+    
     def mode_condition(self, k):
         if type(k) == np.ndarray:
             if len(k)==1:
                 k = k[0]
             elif len(k)==2:
                 k = k[0] + 1j*k[1]
-        mode_cond = np.linalg.det(np.subtract(np.eye(2 * self.number_of_channels), self.scattering_matrix(k)))
+        mode_cond = np.linalg.det(self.matrix_condition(k))
         return [mode_cond.real, mode_cond.imag]
+    
+    def matrix_condition_derivative(self, k):
+        adjugate_matrix = adjugate(self.matrix_condition(k))
+        derivative_matrix = self.scattering_matrix_derivative(k)
+        matrix_condition_derivative_value = np.trace(adjugate_matrix @ derivative_matrix)
+        return matrix_condition_derivative_value
+    
+    def jacobian(self, k):
+        if type(k) == np.ndarray:
+            if len(k)==1:
+                k = k[0]
+            elif len(k)==2:
+                k = k[0] + 1j*k[1]
+        derivative = self.matrix_condition_derivative(k)
+        a = np.real(derivative)
+        b = np.imag(derivative)
+        jacobian = np.array([[a, -b],
+                             [b, a]])
+        return jacobian
+
     
     def get_eigenvalue(self, n = 1):
         guess = 0
-        for i in range(15):
+        for i in range(10):
             guess = self.eigenvalue_guess(n,guess)
 
-        result = scipy.optimize.root(self.mode_condition, [guess,0.])
-        k_res = abs(result['x'][0])
-        # self.eigenmodes.append(k_res)
-        return k_res
+        result = scipy.optimize.root(self.mode_condition, [guess,0.])#, jac=self.jacobian)
+        resonance_frequency_k = abs(result['x'][0])
+        self.eigenvalues[n] = resonance_frequency_k
+        return resonance_frequency_k
     
 
-    def eigenfunction(self, z, n=1):
-        z = np.array(z).astype('complex128')
-        k_res = self.eigenmodes[0]
-        eigenfunction_coefficients = scipy.linalg.null_space(self.mode_condition(k_res), rcond=1e-5)[:, 0]
-        self.channel_eigenfunction = []
-        for i in range(self.N_channels):
-            self.channel_coefficients[i] = eigenfunction_coefficients[2 * i: 2 * (i + 1)]/self.normalization_factor
-            self.channel_eigenfunction.append(lambda z,i=i: np.dot(self.channel_coefficients[i], self.basis(k_res, z)))
+    def get_eigenfunction(self, n=1):
+        eigenfunction = self.eigenfunctions.get(n, None)
+        if eigenfunction:
+            return eigenfunction
+        
+        resonance_frequency_k = self.eigenvalues.get(n, self.get_eigenvalue(n))
+
+        eigenfunction_coefficients = scipy.linalg.null_space(self.matrix_condition(resonance_frequency_k), rcond=1e-7)[:, 0]
 
 
-        return np.piecewise(z,
-                           [np.logical_and(z >= z_start, z <= z_stop) for z_start, z_stop in self.channel_limits.values()],
-                           self.channel_eigenfunction)
+        self.eigenfunctions[n] = eig.Eigenfunction(eigenfunction_coefficients, 
+                                                   self.channel_limits, 
+                                                   resonance_frequency_k, 
+                                                   self.min_position,
+                                                   self.max_position)
 
+        return self.eigenfunctions[n]
+        
         
 # class Resonator:
 #     def __init__(self, name):
