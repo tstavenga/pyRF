@@ -34,7 +34,7 @@ class Eigenfunction:
         
         for channel in self.channel_limits.keys():        
             channel_eigenfunctions.append(lambda z,channel=channel: np.dot(self.coefficients[2 * channel: 2 * (channel + 1)], 
-                                                                                self.basis(self.resonance_frequency, self.phase_velocity, z)))
+                                                                                self.basis(self.resonance_frequency, self.phase_velocity[channel], z)))
         return channel_eigenfunctions
 
     def __call__(self, z) -> Any:

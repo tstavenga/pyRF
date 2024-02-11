@@ -70,6 +70,8 @@ class Circuit:
             # add the transmission line parameters to the correct pin of the node element
             self.connect_resonator_transmission_lines(
                 connection_settings, channel_number)
+            resonator.set_phase_velocity(connection_settings['transmission_line']['phase_velocity'], 
+                                         channel_number)
         return resonator
 
     def connect_resonator_transmission_lines(self, connection_settings, channel_number):

@@ -22,6 +22,7 @@ class FeedLine(Resonator):
         for vector in eigenfunction_coefficients.T:
             eigenfunctions.append(
                 eig.FeedlineEigenfunction(vector, self.channel_limits, frequency,
+                                          self.phase_velocity,
                                           self.min_position,
                                           self.max_position))
             
