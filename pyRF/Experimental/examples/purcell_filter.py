@@ -7,43 +7,46 @@ import matplotlib.pyplot as plt
 
 
 class TwoChannelResonator(Circuit):
-    def __init__(self, name='two_channel_resonator'):
+    def __init__(self, name='two_channel_resonator', phase_velocity=1e8, characteristic_impedance = 50, coupling_capacitance=29.68e-15, open_capacitance=24.5e-15, open_position=3547.4e-6, capacitor_position=3200e-6, short_position=0.):
         super().__init__(name)
+        self.phase_velocity = phase_velocity
+        self.coupling_capacitance = coupling_capacitance
+        self.open_capacitance = open_capacitance
+        self.open_position = open_position
+        self.capacitor_position = capacitor_position
+        self.short_position = short_position
+        self.characteristic_impedance = characteristic_impedance
+
 
     def define_circuit_elements(self):
-        capacitance = 29.68e-15
-        open_capacitance = 24.5e-15
-        open_position = 3547.4e-6
-        capacitor_position = 3200e-6
-        short_position = 0
 
         self.circuit_elements = {
             'C2': {
                 'element':'Capacitor',
                 'values':{
-                    'capacitance':open_capacitance,
-                    'position': open_position
+                    'capacitance':self.open_capacitance,
+                    'position': self.open_position
                 }
             },
             'C1': {
                 'element': 'Capacitor',
                 'values': {
-                    'capacitance':capacitance,
-                    'position': capacitor_position,
+                    'capacitance':self.coupling_capacitance,
+                    'position': self.capacitor_position,
                 }
             },
 
             'S1': {'element': 'Short',
                    'values': {
-                       'position': short_position,
+                       'position': self.short_position,
                        }
                     },
         }
 
 
     def define_resonators(self):
-        impedance = 50
-        phase_velocity = 1e8
+        impedance = self.characteristic_impedance
+        phase_velocity = self.phase_velocity
         self.resonators = {
             'R1': {
                 'Open_Capacitor':{
@@ -74,8 +77,8 @@ class TwoChannelResonator(Circuit):
                         'pin': 'alpha',
                     },
                     'transmission_line': {
-                        'characteristic_impedance': 50,
-                        'phase_velocity': 1e8,
+                        'characteristic_impedance': self.characteristic_impedance,
+                        'phase_velocity': self.phase_velocity,
                     },
                 }
             }
@@ -88,7 +91,10 @@ if __name__ == '__main__':
     two_channel_resonator.initialize()
     R1 = two_channel_resonator.resonator_dict['R1']
     eigenvalue = R1.get_eigenvalue()
-    frequency = eigenvalue*phase_velocity
+    eigenfunction = R1.get_eigenfunction()
+    eigenfunction.plot()
+    plt.show()
+    frequency = eigenvalue
     print('Resonator frequency: {:1.5f} GHz'.format(frequency*1e-9))
 
 
