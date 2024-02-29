@@ -49,7 +49,7 @@ class PurcellFilter(Circuit):
     def define_resonators(self):
         impedance = 50
         phase_velocity = 1e8
-        airbridge_number = 500
+        airbridge_number = 5
         self.resonators = {
             'R1': {
                 'Short_Airbridge': {
@@ -114,26 +114,10 @@ if __name__ == '__main__':
     two_channel_resonator = PurcellFilter('quarter_wave')
     two_channel_resonator.initialize()
     R1 = two_channel_resonator.resonator_dict['R1']
-    import cProfile, pstats
-    profiler = cProfile.Profile()
-    profiler.enable()
-    eigv = R1.get_eigenvalue()
-    
-    profiler.disable()
-    stats = pstats.Stats(profiler).sort_stats('ncalls')
-    stats.print_stats()
-    # eigenvalue = R1.get_eigenvalue()
-    # frequency = eigenvalue*phase_velocity
-    # print('Resonator frequency: {:1.5f} GHz'.format(frequency*1e-9))
-    # ks = np.linspace(0,200,201,dtype=np.complex128)
-    # mc = np.array(list(map(lambda k:R1.mode_condition(k), ks)))
-    # plt.plot(ks,mc)
-    # for n in range(1):
-    #     print(n)
-    #     guess = 0
-    #     for i in range(15):
-    #         guess = R1.eigenvalue_guess(n+1,guess)
-    #     plt.plot(R1.get_eigenvalue(n=n+1),0,'rx')
-    #     plt.plot(guess,0,'g+')
-    # plt.show()
 
+    eigv = R1.get_eigenvalue()
+    eigfunc = R1.get_eigenfunction()
+    eigfunc.plot()
+    plt.show()
+    print(eigv)
+    
