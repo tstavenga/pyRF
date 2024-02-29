@@ -1,8 +1,8 @@
 import networkx as nx
 import numpy as np
 import scipy
-from . import eigenfunction as eig
-from .helper.adjugate import adjugate
+from pyRF.core import eigenfunction as eig
+from pyRF.helper.adjugate import adjugate
 
 class Resonator:
     def __init__(self, name, number_of_channels) -> None:

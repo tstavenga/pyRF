@@ -1,6 +1,6 @@
-import pyRF.node_element as ne
-from pyRF.resonator import Resonator
-from pyRF.feedline import FeedLine
+import pyRF.core.node_element as ne
+from pyRF.core.resonator import Resonator
+from pyRF.core.feedline import FeedLine
 
 
 

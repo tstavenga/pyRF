@@ -1,6 +1,6 @@
 import numpy as np
 
-from . import scattering_matrix as sm
+from pyRF.core import scattering_matrix as sm
 from copy import copy
 
 

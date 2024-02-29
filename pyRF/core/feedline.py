@@ -1,8 +1,8 @@
-from pyRF.resonator import Resonator
-from . import eigenfunction as eig
 import pandas as pd
 import numpy as np
 import scipy
+from pyRF.core.resonator import Resonator
+from pyRF.core import eigenfunction as eig
 
 
 class FeedLine(Resonator):
