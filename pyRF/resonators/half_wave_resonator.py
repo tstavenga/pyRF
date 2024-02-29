@@ -3,7 +3,7 @@ from pyRF.core.circuit import Circuit
 PHASE_VELOCITY = 124998795.11524159
 LENGTH = 8.095835673090729e-3
 
-class HalfWave(Circuit):
+class HalfWaveResonator(Circuit):
     def __init__(self, 
                  length: float, 
                  phase_velocity: float,
@@ -16,6 +16,7 @@ class HalfWave(Circuit):
         self.capacitance_start = capacitance_start
         self.capacitance_end = capacitance_end
         self.characteristic_impedance = characteristic_impedance
+        self.initialized = False
 
     def define_circuit_elements(self):
 
@@ -59,6 +60,14 @@ class HalfWave(Circuit):
             }
         }
 
+    def get_frequency(self):
+        if not self.initialized:
+            self.initialize()
+        
+        resonator = self.resonator_dict['R1']
+        return resonator.get_eigenvalue()
+
+
         
 
 
@@ -66,11 +75,12 @@ if __name__ == '__main__':
 
     phase_velocity = 120e6
     length = 8e-3
-    quarter_wave_circuit = HalfWave(phase_velocity=phase_velocity,
+    half_wave_circuit = HalfWave(phase_velocity=phase_velocity,
                                     length=length,
                                     capacitance_start=30e-15,
                                     capacitance_end=30e-15)
-    quarter_wave_circuit.initialize()
-    R1 = quarter_wave_circuit.resonator_dict['R1']
+    half_wave_circuit.initialize()
+    R1 = half_wave_circuit.resonator_dict['R1']
     eigv = R1.get_eigenvalue()
+    print(half_wave_circuit.get_frequency())
     print(eigv)

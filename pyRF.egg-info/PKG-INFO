@@ -5,13 +5,8 @@ Summary: Package for simulating the eigenmodes of RF circuits and resonators. In
 Home-page: https://github.com/tstavenga/pyRF
 Author: Thijs Stavenga
 Author-email: thijsstavenga@msn.com
-License: UNKNOWN
 Keywords: RF qubit resonator hfss eigenmode script scripting physics
-Platform: UNKNOWN
 Classifier: Development Status :: 2 - Pre-Alpha
 Classifier: Intended Audience :: Science/Research
 Classifier: Programming Language :: Python :: 3.9
 License-File: LICENSE
-
-UNKNOWN
-
