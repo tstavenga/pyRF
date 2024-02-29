@@ -5,8 +5,7 @@ from pyRF.feedline import FeedLine
 
 
 class Circuit:
-    def __init__(self, name):
-        self.name = name
+    def __init__(self):
         self.circuit_elements: dict = None
         self.transmission_lines: dict = None
         self.circuit_element_dict: dict = {}
@@ -16,6 +15,9 @@ class Circuit:
         self.feedlines: dict = {}
         self.feedline_dict: dict = {}
 
+    def get_resonators(self):
+        return self.resonator_dict
+    
     def define_circuit_elements(self):
         pass
 
