@@ -70,6 +70,7 @@ class Eigenfunction:
         eigenfunction_values = self(position_values)
         ax.plot(position_values, np.real(eigenfunction_values), **plot_kwargs, label='real part')
         ax.plot(position_values, np.imag(eigenfunction_values), **plot_kwargs, label='imaginary part')
+        ax.plot(position_values, np.abs(eigenfunction_values), **plot_kwargs, label='absolute value')
         ax.legend()
         return ax
 
