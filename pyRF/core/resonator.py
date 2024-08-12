@@ -1,4 +1,3 @@
-import networkx as nx
 import numpy as np
 import scipy
 from pyRF.core import eigenfunction as eig

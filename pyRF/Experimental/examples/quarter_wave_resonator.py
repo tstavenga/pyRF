@@ -1,14 +1,13 @@
-from pyRF.circuit import Circuit
-from pyRF.resonator import Resonator
-from pyRF import node_element as ne
+from pyRF.core.circuit import Circuit
+from pyRF.core.resonator import Resonator
 import numpy as np
 import matplotlib.pyplot as plt
 import cProfile
 
 
 class QuarterWave(Circuit):
-    def __init__(self, name='Quarter wave'):
-        super().__init__(name)
+    def __init__(self):
+        super().__init__()
 
     def define_circuit_elements(self):
         capacitance = 30e-15

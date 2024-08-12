@@ -28,7 +28,7 @@ class ShortMatrix:
 class CapacitorMatrix:
     @staticmethod
     def scattering_matrix(frequency, position, direction_array, characteristic_impedance, phase_velocity, capacitance):
-        zc_inv = 1j * frequency * capacitance
+        zc_inv = 2j * np.pi * frequency * capacitance
         if len(direction_array) == 1:
             scattering_matrix = np.array([[(1 - characteristic_impedance * zc_inv) / (1 + characteristic_impedance * zc_inv) * 
                                            np.exp(-4j * np.pi * direction_array[0] * frequency / phase_velocity * position)]])
@@ -47,8 +47,8 @@ class CapacitorMatrix:
     @staticmethod
     def derivative(frequency, position, direction_array, characteristic_impedance, phase_velocity, capacitance):
         exponential_constant = -4j * np.pi * direction_array[0] * frequency / phase_velocity * position
-        zc_inv = 1j * frequency * capacitance
-        zc_inv_prime = 1j * phase_velocity * capacitance
+        zc_inv = 2j * np.pi * frequency * capacitance
+        zc_inv_prime = 2j * np.pi * phase_velocity * capacitance
         prefactor = np.exp(exponential_constant * frequency / phase_velocity)/(1 + characteristic_impedance * zc_inv)**2
         derivative = prefactor * ((characteristic_impedance * zc_inv)**2 * exponential_constant - characteristic_impedance* zc_inv_prime - exponential_constant)
         return derivative
